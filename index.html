@@ -43,4 +43,132 @@
     h1 {
       color: var(--lavender);
       margin-bottom: 10px;
-      font-size
+      font-size: 32px;
+    }
+
+    #score {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Змейка</h1>
+  <div id="score">Очки: 0</div>
+
+  <canvas id="game" width="380" height="380"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+
+    const cell = 20;
+    const cells = canvas.width / cell;
+
+    let snake = [{ x: 5, y: 5 }];
+    let vx = 1, vy = 0;
+    let food = randomFood();
+    let score = 0;
+
+    // Звуки
+    const sndTurn = new Audio("turn.ogg");
+    const sndEat = new Audio("eat.ogg");
+    const sndDie = new Audio("die.ogg");
+
+    [sndTurn, sndEat, sndDie].forEach(s => { s.preload = "auto"; s.volume = 0.4; });
+
+    // Вибрация
+    function vib(ms) { if (navigator.vibrate) navigator.vibrate(ms); }
+
+    function randomFood() {
+      return {
+        x: Math.floor(Math.random() * cells),
+        y: Math.floor(Math.random() * cells)
+      };
+    }
+
+    function reset() {
+      vib(100);
+      sndDie.play();
+
+      snake = [{ x: 5, y: 5 }];
+      vx = 1;
+      vy = 0;
+      score = 0;
+      scoreEl.textContent = "Очки: " + score;
+      food = randomFood();
+    }
+
+    function update() {
+      const head = { x: snake[0].x + vx, y: snake[0].y + vy };
+
+      if (head.x < 0 || head.y < 0 || head.x >= cells || head.y >= cells) {
+        reset();
+        return;
+      }
+
+      for (let p of snake) {
+        if (p.x === head.x && p.y === head.y) { reset(); return; }
+      }
+
+      snake.unshift(head);
+
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        scoreEl.textContent = "Очки: " + score;
+        vib(50);
+        sndEat.play();
+        food = randomFood();
+      } else {
+        snake.pop();
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = "#313244";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = "#f38ba8";
+      ctx.fillRect(food.x * cell, food.y * cell, cell, cell);
+
+      ctx.fillStyle = "#a6e3a1";
+      snake.forEach(p => { ctx.fillRect(p.x * cell, p.y * cell, cell - 1, cell - 1); });
+    }
+
+    function loop() {
+      update();
+      draw();
+      setTimeout(loop, 120);
+    }
+    loop();
+
+    // === Супер-плавные свайпы (вариант A) ===
+    let startX = 0, startY = 0;
+
+    document.body.addEventListener("touchstart", e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.body.addEventListener("touchmove", e => {
+      const dx = e.touches[0].clientX - startX;
+      const dy = e.touches[0].clientY - startY;
+
+      const threshold = 15; // минимальный жест
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > threshold && vx !== -1) { vx = 1; vy = 0; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dx < -threshold && vx !== 1) { vx = -1; vy = 0; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+      } else {
+        if (dy > threshold && vy !== -1) { vx = 0; vy = 1; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dy < -threshold && vy !== 1) { vx = 0; vy = -1; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+      }
+    }, { passive: true });
+
+  </script>
+
+</body>
+</html>
