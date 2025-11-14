@@ -117,10 +117,11 @@
       snake.unshift(head);
 
       if (head.x === food.x && head.y === food.y) {
+        sndEat.play();
         score++;
         scoreEl.textContent = "Очки: " + score;
         vib(50);
-        sndEat.play();
+        
         food = randomFood();
       } else {
         snake.pop();
@@ -160,11 +161,11 @@
       const threshold = 15; // минимальный жест
 
       if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > threshold && vx !== -1) { vx = 1; vy = 0; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
-        if (dx < -threshold && vx !== 1) { vx = -1; vy = 0; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dx > threshold && vx !== -1) { sndTurn.play(); vx = 1; vy = 0; vib(10);  startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dx < -threshold && vx !== 1) { sndTurn.play(); vx = -1; vy = 0; vib(10); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
       } else {
-        if (dy > threshold && vy !== -1) { vx = 0; vy = 1; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
-        if (dy < -threshold && vy !== 1) { vx = 0; vy = -1; vib(10); sndTurn.play(); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dy > threshold && vy !== -1) { sndTurn.play(); vx = 0; vy = 1; vib(10);  startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
+        if (dy < -threshold && vy !== 1) { sndTurn.play(); vx = 0; vy = -1; vib(10); startX = e.touches[0].clientX; startY = e.touches[0].clientY; }
       }
     }, { passive: true });
 
