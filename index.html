@@ -3,106 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Snake — Mobile Swipe Edition</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Snake — Mobile Swipe</title>
 
   <style>
-    :root {
-      --base: #1e1e2e;
-      --surface1: #45475a;
-      --mauve: #cba6f7;
-      --green: #a6e3a1;
-      --red: #f38ba8;
-      --text: #cdd6f4;
-    }
-
     body {
-      background: var(--base);
-      color: var(--text);
-      font-family: Inter, sans-serif;
-      touch-action: none; /* чтобы экран не скроллился во время свайпов */
+      background: #1e1e2e;
+      color: #cdd6f4;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      touch-action: none; /* чтобы свайпы не скроллили экран */
     }
 
-canvas {
-  background: #2A2A35; /* гарантированно видно */
-  border: 3px solid #cba6f7;
-  border-radius: 12px;
-  width: 95vw;
-  height: 95vw;
-  max-width: 360px;
-  max-height: 360px;
-  display: block;
-  margin: 0 auto;
-}
+    canvas {
+      background: #313244; /* видно на любом фоне */
+      border: 3px solid #cba6f7;
+      border-radius: 12px;
 
+      width: 95vw;
+      height: 95vw;
+      max-width: 380px;
+      max-height: 380px;
 
-    .score {
-      text-align: center;
-      font-size: 1.2rem;
+      display: block;
+      margin: 0 auto;
+      touch-action: none;
+    }
+
+    h1 {
+      color: #cba6f7;
       margin-bottom: 10px;
-      color: var(--mauve);
+    }
+
+    #score {
+      font-size: 24px;
+      margin-bottom: 15px;
     }
   </style>
 </head>
 
-<body class="p-6 flex flex-col items-center">
+<body>
 
-  <h1 class="text-3xl font-bold mb-4 text-mauve">Змейка</h1>
-  <div class="score">Очки: <span id="score">0</span></div>
+  <h1>Змейка</h1>
+  <div id="score">Очки: 0</div>
 
-  <canvas id="game" width="300" height="300"></canvas>
+  <canvas id="game" width="380" height="380"></canvas>
 
   <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
     const scoreEl = document.getElementById("score");
 
-    const size = 15;          // размер клетки
-    let snake = [{ x: 10, y: 10 }];
-    let vx = 1;
-    let vy = 0;
+    const cell = 20;
+    const cells = canvas.width / cell;
+
+    let snake = [{ x: 5, y: 5 }];
+    let vx = 1, vy = 0;
     let food = randomFood();
     let score = 0;
-    let speed = 150;
-    let lastTime = 0;
 
     function randomFood() {
       return {
-        x: Math.floor(Math.random() * (canvas.width / size)),
-        y: Math.floor(Math.random() * (canvas.height / size)),
+        x: Math.floor(Math.random() * cells),
+        y: Math.floor(Math.random() * cells)
       };
     }
 
-    function gameLoop(time) {
-      if (time - lastTime > speed) {
-        update();
-        draw();
-        lastTime = time;
-      }
-      requestAnimationFrame(gameLoop);
+    function reset() {
+      snake = [{ x: 5, y: 5 }];
+      vx = 1;
+      vy = 0;
+      score = 0;
+      scoreEl.textContent = "Очки: " + score;
+      food = randomFood();
     }
 
     function update() {
       const head = { x: snake[0].x + vx, y: snake[0].y + vy };
 
-      // Столкновение со стенами
-      if (
-        head.x < 0 || head.y < 0 ||
-        head.x >= canvas.width / size ||
-        head.y >= canvas.height / size
-      ) return reset();
+      // стены
+      if (head.x < 0 || head.y < 0 || head.x >= cells || head.y >= cells) {
+        reset();
+        return;
+      }
 
-      // Столкновение с собой
-      for (let s of snake) {
-        if (s.x === head.x && s.y === head.y) return reset();
+      // хвост
+      for (let p of snake) {
+        if (p.x === head.x && p.y === head.y) {
+          reset();
+          return;
+        }
       }
 
       snake.unshift(head);
 
-      // Еда
+      // еда
       if (head.x === food.x && head.y === food.y) {
         score++;
-        scoreEl.textContent = score;
+        scoreEl.textContent = "Очки: " + score;
         food = randomFood();
       } else {
         snake.pop();
@@ -110,54 +108,52 @@ canvas {
     }
 
     function draw() {
-      ctx.fillStyle = "var(--surface1)";
+      ctx.fillStyle = "#313244";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       // еда
-      ctx.fillStyle = "var(--red)";
-      ctx.fillRect(food.x * size, food.y * size, size, size);
+      ctx.fillStyle = "#f38ba8";
+      ctx.fillRect(food.x * cell, food.y * cell, cell, cell);
 
       // змейка
-      ctx.fillStyle = "var(--green)";
-      snake.forEach(p =>
-        ctx.fillRect(p.x * size, p.y * size, size - 1, size - 1)
-      );
+      ctx.fillStyle = "#a6e3a1";
+      snake.forEach(p => {
+        ctx.fillRect(p.x * cell, p.y * cell, cell - 1, cell - 1);
+      });
     }
 
-    function reset() {
-      snake = [{ x: 10, y: 10 }];
-      vx = 1;
-      vy = 0;
-      score = 0;
-      scoreEl.textContent = score;
-      food = randomFood();
+    function loop() {
+      update();
+      draw();
+      setTimeout(loop, 120);
     }
 
-    // === СВАЙПЫ ===
-    let tx = 0, ty = 0;
+    loop();
+
+    // ==== Свайпы ====
+
+    let startX = 0, startY = 0;
 
     document.addEventListener("touchstart", e => {
-      tx = e.touches[0].clientX;
-      ty = e.touches[0].clientY;
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
     });
 
     document.addEventListener("touchend", e => {
-      let dx = e.changedTouches[0].clientX - tx;
-      let dy = e.changedTouches[0].clientY - ty;
+      let dx = e.changedTouches[0].clientX - startX;
+      let dy = e.changedTouches[0].clientY - startY;
 
-      const threshold = 30;
+      const t = 40;
 
       if (Math.abs(dx) > Math.abs(dy)) {
-        if (dx > threshold && vx !== -1) { vx = 1; vy = 0; }
-        if (dx < -threshold && vx !== 1) { vx = -1; vy = 0; }
+        if (dx > t && vx !== -1)  { vx = 1; vy = 0; }
+        if (dx < -t && vx !== 1) { vx = -1; vy = 0; }
       } else {
-        if (dy > threshold && vy !== -1) { vx = 0; vy = 1; }
-        if (dy < -threshold && vy !== 1) { vx = 0; vy = -1; }
+        if (dy > t && vy !== -1)  { vx = 0; vy = 1; }
+        if (dy < -t && vy !== 1)  { vx = 0; vy = -1; }
       }
     });
-
-    // старт
-    requestAnimationFrame(gameLoop);
   </script>
+
 </body>
 </html>
